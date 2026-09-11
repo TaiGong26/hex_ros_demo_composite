@@ -1,0 +1,82 @@
+<!--########################################-->
+<!-- Copyright (c) 2026  taigong26.         -->
+<!-- All rights reserved.                   -->
+<!-- Author: taigong26 thetaigon@qq.com     -->
+<!-- Date  : 2026-09-11                     -->
+<!--########################################-->
+
+<launch>
+    <!-- robot connection arguments -->
+    <arg name="chassis_robot_host" default="192.168.1.100"/>
+    <arg name="chassis_robot_port" default="8439"/>
+    <arg name="left_robot_type" default="archer"/>
+    <arg name="left_robot_host" default="192.168.1.100"/>
+    <arg name="left_robot_port" default="8439"/>
+    <arg name="left_robot_grip_type" default="empty"/>
+    <arg name="right_robot_type" default="archer"/>
+    <arg name="right_robot_host" default="192.168.1.101"/>
+    <arg name="right_robot_port" default="8439"/>
+    <arg name="right_robot_grip_type" default="empty"/>
+
+    <!-- shared keyboard input -->
+    <include file="$(find hex_ros_teleop_keyboard)/launch/ros1/teleop_keyboard.launch"/>
+
+    <!-- joystick command input -->
+    <include file="$(find hex_ros_teleop_joystick)/launch/ros1/teleop_joystick.launch">
+        <arg name="use_cmd" value="true"/>
+        <arg name="cmd_topic" value="/chassis/cmd_vel"/>
+    </include>
+
+    <!-- Maver X4 driver and chassis impedance -->
+    <group ns="chassis">
+        <include file="$(find hex_ros_robot_chassis)/launch/ros1/maver.launch">
+            <arg name="robot_host" value="$(arg chassis_robot_host)"/>
+            <arg name="robot_port" value="$(arg chassis_robot_port)"/>
+        </include>
+        <include file="$(find hex_ros_demo_chassis_impedance)/launch/ros1/chassis_impedance_maver_x4.launch">
+            <arg name="use_sim_time" value="false"/>
+        </include>
+    </group>
+
+    <!-- Left real robot driver and impedance -->
+    <group ns="left">
+        <group if="$(eval arg('left_robot_type') == 'archer')">
+            <include file="$(find hex_ros_robot_arm)/launch/ros1/archer.launch">
+                <arg name="robot_host" value="$(arg left_robot_host)"/>
+                <arg name="robot_port" value="$(arg left_robot_port)"/>
+                <arg name="robot_grip_type" value="$(arg left_robot_grip_type)"/>
+                <arg name="test" value="false"/>
+            </include>
+        </group>
+        <group unless="$(eval arg('left_robot_type') == 'archer')">
+            <include file="$(find hex_ros_robot_arm)/launch/ros1/firefly.launch">
+                <arg name="robot_host" value="$(arg left_robot_host)"/>
+                <arg name="robot_port" value="$(arg left_robot_port)"/>
+                <arg name="robot_grip_type" value="$(arg left_robot_grip_type)"/>
+                <arg name="test" value="false"/>
+            </include>
+        </group>
+        <include file="$(find hex_ros_demo_arm_impedance)/launch/ros1/arm_impedance.launch"/>
+    </group>
+
+    <!-- Right real robot driver and impedance -->
+    <group ns="right">
+        <group if="$(eval arg('right_robot_type') == 'archer')">
+            <include file="$(find hex_ros_robot_arm)/launch/ros1/archer.launch">
+                <arg name="robot_host" value="$(arg right_robot_host)"/>
+                <arg name="robot_port" value="$(arg right_robot_port)"/>
+                <arg name="robot_grip_type" value="$(arg right_robot_grip_type)"/>
+                <arg name="test" value="false"/>
+            </include>
+        </group>
+        <group unless="$(eval arg('right_robot_type') == 'archer')">
+            <include file="$(find hex_ros_robot_arm)/launch/ros1/firefly.launch">
+                <arg name="robot_host" value="$(arg right_robot_host)"/>
+                <arg name="robot_port" value="$(arg right_robot_port)"/>
+                <arg name="robot_grip_type" value="$(arg right_robot_grip_type)"/>
+                <arg name="test" value="false"/>
+            </include>
+        </group>
+        <include file="$(find hex_ros_demo_arm_impedance)/launch/ros1/arm_impedance.launch"/>
+    </group>
+</launch>
