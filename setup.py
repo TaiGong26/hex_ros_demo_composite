@@ -30,6 +30,8 @@ setup(
          ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         *get_files('share/' + package_name, 'launch/ros2'),
+        *get_files('share/' + package_name + '/config/ros2',
+                   'config/ros2'),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -29,14 +29,14 @@ def generate_launch_description():
 
     chassis_host_arg = DeclareLaunchArgument(
         name='chassis_robot_host',
-        default_value='192.168.1.100',
+        default_value='172.18.31.1',
         description='Chassis controller IP address')
     chassis_port_arg = DeclareLaunchArgument(
         name='chassis_robot_port',
         default_value='8439',
         description='Chassis controller WebSocket port')
 
-    left_type_arg = DeclareLaunchArgument(
+    left_robot_type_arg = DeclareLaunchArgument(
         name='left_robot_type',
         default_value='firefly',
         choices=['archer', 'firefly'],
@@ -55,7 +55,7 @@ def generate_launch_description():
         choices=['gp100', 'gp80', 'gr100', 'empty'],
         description='Left robot grip type')
 
-    right_type_arg = DeclareLaunchArgument(
+    right_robot_type_arg = DeclareLaunchArgument(
         name='right_robot_type',
         default_value='firefly',
         choices=['archer', 'firefly'],
@@ -73,6 +73,19 @@ def generate_launch_description():
         default_value='empty',
         choices=['gp100', 'gp80', 'gr100', 'empty'],
         description='Right robot grip type')
+    
+    use_cmd_arg = DeclareLaunchArgument(
+        name='use_cmd',
+        default_value='true',
+        choices=['true', 'false'],
+        description='Flag to use command topic')
+    
+    rviz_arg = DeclareLaunchArgument(
+        name='rviz',
+        default_value='true',
+        choices=['true', 'false'],
+        description='Flag to start the composite RViz configuration')
+    
 
     chassis_driver_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -80,6 +93,7 @@ def generate_launch_description():
         launch_arguments={
             'robot_host': LaunchConfiguration('chassis_robot_host'),
             'robot_port': LaunchConfiguration('chassis_robot_port'),
+            'rviz': LaunchConfiguration('rviz'),
         }.items(),
     )
     chassis_impedance_launch = IncludeLaunchDescription(
@@ -95,7 +109,7 @@ def generate_launch_description():
             PathJoinSubstitution(
                 [joystick_pkg_path, 'teleop_joystick.launch.py'])),
         launch_arguments={
-            'use_cmd': 'true',
+            'use_cmd': LaunchConfiguration('use_cmd'),
             'cmd_topic': '/chassis/cmd_vel',
         }.items(),
     )
@@ -164,14 +178,16 @@ def generate_launch_description():
     return LaunchDescription([
         chassis_host_arg,
         chassis_port_arg,
-        left_type_arg,
+        left_robot_type_arg,
         left_host_arg,
         left_port_arg,
         left_grip_arg,
-        right_type_arg,
+        right_robot_type_arg,
         right_host_arg,
         right_port_arg,
         right_grip_arg,
+        rviz_arg,
+        use_cmd_arg,
         keyboard_launch,
         joystick_launch,
         chassis_group,
