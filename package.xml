@@ -7,8 +7,6 @@
   <maintainer email="thetaigon@qq.com">taigong26</maintainer>
   <license>Apache-2.0</license>
 
-  <exec_depend condition="$ROS_VERSION == 2">launch</exec_depend>
-  <exec_depend condition="$ROS_VERSION == 2">launch_ros</exec_depend>
   <exec_depend>hex_ros_demo_arm_impedance</exec_depend>
   <exec_depend>hex_ros_demo_chassis_impedance</exec_depend>
   <exec_depend>hex_ros_robot_arm</exec_depend>
