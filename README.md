@@ -1,103 +1,84 @@
-# hex_ros_demo_composite
-[**中文**](README_cn.md) | **English**
+# hex_ros_demo_composite — Chassis and Dual-Arm Whole-Body Impedance Launcher
+
+[中文](README_cn.md) | **English**
 
 ## Table of Contents
 
-- [1. About](#1-about)
-- [2. Launch Contents](#2-launch-contents)
-- [3. Topics](#3-topics)
-- [4. Launch Arguments](#4-launch-arguments)
-- [5. Dependencies](#5-dependencies)
-- [6. Quick Start](#6-quick-start)
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Launch Contents](#launch-contents)
+- [Topics](#topics)
+- [Launch Arguments](#launch-arguments)
+- [Project Structure](#project-structure)
 
-## 1. About
+## Overview
 
-This package provides a whole-body impedance bringup that starts the Maver X4 chassis and impedance-controlled real arms on the left and right sides. It only composes existing driver, teleoperation, and impedance launches; it does not provide an independent control node.
+`hex_ros_demo_composite` is a real-robot bringup package for a Maver X4 chassis with two arms. It organizes existing driver, impedance-control, joystick, and keyboard launches under consistent namespaces.
 
-The current real-robot composition provides:
+A single launch starts:
 
-- Maver X4 chassis;
-- independently selectable Archer Y6 or Firefly Y6 left and right arms;
-- one shared keyboard node;
-- joystick input for chassis velocity commands.
+- the Maver X4 driver and chassis impedance control;
+- left and right Archer Y6 or Firefly Y6 drivers and arm impedance control;
+- chassis joystick input, one shared keyboard, and optional RViz.
 
-## 2. Launch Contents
+This package supports **ROS 2 Humble** and is compatible with **ROS 1 Noetic**.
 
-```text
-hex_ros_demo_composite/
-├── launch/
-│   ├── ros1/real_whole_body_impedance.launch
-│   └── ros2/real_whole_body_impedance.launch.py
-├── config/                  # Reserved configuration directories; not read by the current composition
-├── CMakeLists.txt
-├── setup.py
-└── package.xml
-```
+## Quick Start
 
-## 3. Topics
+> Complete [Installation](#installation) before launching.
 
-The main topics after startup are:
+> All `192.168.1.x` addresses in this document are examples; replace them with actual device addresses. This launch moves the chassis and arms. Clear the operating area, verify the emergency stop, and validate with low-risk settings first.
 
-| Direction | Topic | Description |
-|-----------|-------|-------------|
-| Published | `/chassis/cmd_vel` | Chassis joystick velocity command |
-| Published | `/chassis/chs_ctrl` | Chassis impedance control command |
-| Published | `/left/manip_ctrl` | Left arm impedance control command |
-| Published | `/right/manip_ctrl` | Right arm impedance control command |
-| Subscribed | `/chassis/chs_state` | Chassis state |
-| Subscribed | `/left/manip_state` | Left arm state |
-| Subscribed | `/right/manip_state` | Right arm state |
-| Subscribed | `/teleop_keyboard_state` | Shared keyboard state |
-
-The exact relative names are defined by the included driver and impedance launches; the paths above are the results of the namespaces used by the current composition.
-
-## 4. Launch Arguments
-
-Chassis arguments:
-
-| Argument | Description |
-|----------|-------------|
-| `chassis_robot_host` | Chassis controller IP address |
-| `chassis_robot_port` | Chassis controller port |
-
-Left arm arguments:
-
-| Argument | Description |
-|----------|-------------|
-| `left_robot_type` | `archer` or `firefly` |
-| `left_robot_host` | Left arm controller IP address |
-| `left_robot_port` | Left arm controller port |
-| `left_robot_grip_type` | `gp100`, `gp80`, `gr100`, or `empty` |
-
-Right arm arguments:
-
-| Argument | Description |
-|----------|-------------|
-| `right_robot_type` | `archer` or `firefly` |
-| `right_robot_host` | Right arm controller IP address |
-| `right_robot_port` | Right arm controller port |
-| `right_robot_grip_type` | `gp100`, `gp80`, `gr100`, or `empty` |
-
-Other arguments:
-
-| Argument | Description |
-|----------|-------------|
-| `use_cmd` | Enable joystick command input |
-| `rviz` | Start the RViz instance provided by the chassis launch |
-
-## 5. Dependencies
-
-### Python Packages
+### ROS 2
 
 ```shell
-pip3 install 'hex-util-msg>=0.1.0'
-pip3 install 'hex-util-ros>=0.1.0a4'
-pip3 install 'hex-driver-robot>=0.1.0'
+ros2 launch hex_ros_demo_composite real_whole_body_impedance.launch.py \
+    chassis_robot_host:=192.168.1.100 chassis_robot_port:=8439 \
+    left_robot_host:=192.168.1.100 left_robot_port:=8439 left_robot_type:=firefly left_robot_grip_type:=empty \
+    right_robot_host:=192.168.1.100 right_robot_port:=9439 right_robot_type:=firefly right_robot_grip_type:=empty \
+    use_cmd:=true rviz:=true
 ```
 
-### ROS Packages
+### ROS 1
 
 ```shell
+roslaunch hex_ros_demo_composite real_whole_body_impedance.launch \
+    chassis_robot_host:=192.168.1.100 chassis_robot_port:=8439 \
+    left_robot_host:=192.168.1.100 left_robot_port:=8439 left_robot_type:=firefly left_robot_grip_type:=empty \
+    right_robot_host:=192.168.1.100 right_robot_port:=9439 right_robot_type:=firefly right_robot_grip_type:=empty
+```
+
+## Installation
+
+### Prerequisites
+
+- **ROS 2 Humble** is installed; use **ROS 1 Noetic** for ROS 1 compatibility.
+- Python 3, `pip3`, Git, and the build tools for the selected ROS version are installed.
+- For real-hardware scenarios, devices are reachable and the actual IP addresses, ports, and device models are known.
+
+### 1. Install Python Dependencies for the Launch Stack
+
+```shell
+pip3 install \
+    'hex-util-msg>=0.1.0' \
+    'hex-util-ros>=0.1.0' \
+    'hex-util-runtime>=0.1.0' \
+    'hex-driver-robot>=0.1.0' \
+    evdev
+```
+
+### 2. Create and Enter the Workspace
+
+```shell
+mkdir -p <your_ws>/src
+cd <your_ws>/src
+```
+
+### 3. Clone ROS Packages for the Launch Stack
+
+```shell
+git clone https://github.com/hexfellow/hex_ros_msgs.git
 git clone https://github.com/hexfellow/hex_ros_demo_composite.git
 git clone https://github.com/hexfellow/hex_ros_demo_arm_impedance.git
 git clone https://github.com/hexfellow/hex_ros_demo_chassis_impedance.git
@@ -109,93 +90,97 @@ git clone https://github.com/hexfellow/hex_ros_urdf_archer_y6.git
 git clone https://github.com/hexfellow/hex_ros_urdf_maver_x4.git
 ```
 
-Dependency responsibilities:
+### 4. Build
 
-- `hex_ros_demo_arm_impedance`: arm impedance nodes and parameters for the left and right arms;
-- `hex_ros_demo_chassis_impedance`: Maver X4 chassis impedance node and parameters;
-- `hex_ros_robot_arm`: Archer Y6 / Firefly Y6 arm drivers;
-- `hex_ros_robot_chassis`: Maver X4 chassis driver;
-- `hex_ros_teleop_joystick`: joystick input node;
-- `hex_ros_teleop_keyboard`: shared keyboard input node;
-- `hex_ros_urdf_archer_y6`: arm model resources;
-- `hex_ros_urdf_maver_x4`: chassis model resources.
-
-## 6. Quick Start
-
-### ROS 1
-
-Open the following file first:
-
-```text
-launch/ros1/real_whole_body_impedance.launch
-```
-
-Edit these arguments for the actual devices:
-
-```xml
-<arg name="chassis_robot_host" default="192.168.1.100"/>
-<arg name="chassis_robot_port" default="8439"/>
-<arg name="left_robot_type" default="archer"/>
-<arg name="left_robot_host" default="192.168.1.100"/>
-<arg name="left_robot_port" default="8439"/>
-<arg name="left_robot_grip_type" default="empty"/>
-<arg name="right_robot_type" default="archer"/>
-<arg name="right_robot_host" default="192.168.1.100"/>
-<arg name="right_robot_port" default="9439"/>
-<arg name="right_robot_grip_type" default="empty"/>
-```
-
-Then build and launch:
-
-```shell
-source /opt/ros/noetic/setup.bash
-cd <your_ws>
-catkin_make
-source devel/setup.bash
-roslaunch hex_ros_demo_composite real_whole_body_impedance.launch
-```
-
-### ROS 2
-
-Open the following file first:
-
-```text
-launch/ros2/real_whole_body_impedance.launch.py
-```
-
-Edit the `default_value` values in these `DeclareLaunchArgument` declarations:
-
-```python
-chassis_host_arg = DeclareLaunchArgument(
-    name='chassis_robot_host', default_value='192.168.1.100')
-chassis_port_arg = DeclareLaunchArgument(
-    name='chassis_robot_port', default_value='8439')
-left_robot_type_arg = DeclareLaunchArgument(
-    name='left_robot_type', default_value='firefly')
-left_host_arg = DeclareLaunchArgument(
-    name='left_robot_host', default_value='192.168.1.100')
-left_port_arg = DeclareLaunchArgument(
-    name='left_robot_port', default_value='8439')
-left_grip_arg = DeclareLaunchArgument(
-    name='left_robot_grip_type', default_value='empty')
-right_robot_type_arg = DeclareLaunchArgument(
-    name='right_robot_type', default_value='firefly')
-right_host_arg = DeclareLaunchArgument(
-    name='right_robot_host', default_value='192.168.1.100')
-right_port_arg = DeclareLaunchArgument(
-    name='right_robot_port', default_value='9439')
-right_grip_arg = DeclareLaunchArgument(
-    name='right_robot_grip_type', default_value='empty')
-```
-
-After editing, build and launch:
+**ROS 2:**
 
 ```shell
 source /opt/ros/humble/setup.bash
 cd <your_ws>
 colcon build
 source install/setup.bash
-ros2 launch hex_ros_demo_composite real_whole_body_impedance.launch.py
 ```
 
-Only one keyboard node is started, using the shared `/teleop_keyboard_state` topic. Press **`q`** to run the impedance exit and settling sequence. Verify emergency-stop operation and validate parameters and gains in a safe area before use.
+**ROS 1:**
+
+```shell
+source /opt/ros/noetic/setup.bash
+cd <your_ws>
+catkin_make
+source devel/setup.bash
+```
+
+## Launch Contents
+
+The complete launch starts:
+
+- the Maver X4 chassis driver, chassis impedance node, and chassis joystick input;
+- arm drivers and impedance nodes in the `left` and `right` namespaces;
+- one shared keyboard node publishing `/teleop_keyboard_state`;
+- optional RViz. Select Archer Y6 or Firefly Y6 independently with `left_robot_type` and `right_robot_type`.
+
+Press **`q`** once to trigger the chassis and both arm impedance nodes to exit and settle together. Keep the entire operating area clear until all three have finished.
+
+Chassis joystick mapping: the left-stick vertical axis commands forward/backward X motion, the left-stick horizontal axis commands lateral Y motion, and the right-stick horizontal axis commands yaw. `Y` / `X` increase / decrease linear speed; `B` / `A` increase / decrease angular speed. Verify output with `ros2 topic echo /chassis/cmd_vel` (ROS 1: `rostopic echo /chassis/cmd_vel`).
+
+`hex_ros_teleop_joystick` manages the joystick `device_path`. If auto-detection fails or multiple input devices are present, set it in `<your_ws>/src/hex_ros_teleop_joystick/config/ros2/params.yaml` or `<your_ws>/src/hex_ros_teleop_joystick/config/ros1/params.yaml`, then rebuild and source the workspace.
+
+## Topics
+
+The table below summarizes node connections created by the composition.
+
+| Topic | Publisher | Subscriber | Type | Description |
+|-------|-----------|------------|------|-------------|
+| `/chassis/cmd_vel` | Joystick node | Chassis impedance node | `geometry_msgs/msg/Twist` | Chassis velocity command |
+| `/chassis/chs_ctrl` | Chassis impedance node | Chassis driver | `hex_ros_msgs/msg/HexRosRoboChsCtrlStamped` | Chassis control message |
+| `/left/manip_ctrl` | Left arm impedance node | Left arm driver | `hex_ros_msgs/msg/HexRosRoboManipCtrlStamped` | Left arm control message |
+| `/right/manip_ctrl` | Right arm impedance node | Right arm driver | `hex_ros_msgs/msg/HexRosRoboManipCtrlStamped` | Right arm control message |
+| `/chassis/chs_state` | Chassis driver | Chassis impedance node | `hex_ros_msgs/msg/HexRosRoboChsStateStamped` | Chassis state message |
+| `/left/manip_state` | Left arm driver | Left arm impedance node | `hex_ros_msgs/msg/HexRosRoboManipStateStamped` | Left arm state message |
+| `/right/manip_state` | Right arm driver | Right arm impedance node | `hex_ros_msgs/msg/HexRosRoboManipStateStamped` | Right arm state message |
+| `/teleop_keyboard_state` | Keyboard node | Chassis and both arm impedance nodes | `hex_ros_msgs/msg/HexRosTeleopKeyboardStateStamped` | Keyboard state message |
+
+The exact relative names are defined by the included driver and impedance launches; the paths above are the results of the namespaces used by the current composition.
+
+## Launch Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `chassis_robot_host` | Chassis controller IP address |
+| `chassis_robot_port` | Chassis controller port |
+| `left_robot_type` | Left arm type: `archer` or `firefly` |
+| `left_robot_host` | Left arm controller IP address |
+| `left_robot_port` | Left arm controller port |
+| `left_robot_grip_type` | `gp100`, `gp80`, `gr100`, or `empty` |
+| `right_robot_type` | Right arm type: `archer` or `firefly` |
+| `right_robot_host` | Right arm controller IP address |
+| `right_robot_port` | Right arm controller port |
+| `right_robot_grip_type` | `gp100`, `gp80`, `gr100`, or `empty` |
+| `use_cmd` | Enable joystick command input; fixed to `true` in ROS 1 |
+| `rviz` | Start RViz; exposed only by the top-level ROS 2 launch |
+
+## Project Structure
+
+```text
+hex_ros_demo_composite/
+├── config/
+│   ├── ros1/
+│   └── ros2/
+├── hex_ros_demo_composite/
+│   └── __init__.py                          # Python package initializer
+├── launch/
+│   ├── ros1/
+│   │   └── real_whole_body_impedance.launch # ROS 1 composition launch file
+│   └── ros2/
+│       └── real_whole_body_impedance.launch.py # ROS 2 composition launch file
+├── resource/
+│   └── hex_ros_demo_composite               
+├── .gitignore
+├── CMakeLists.txt
+├── LICENSE
+├── package.xml
+├── README_cn.md
+├── README.md
+├── setup.cfg
+└── setup.py
+```

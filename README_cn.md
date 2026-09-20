@@ -1,103 +1,84 @@
-# hex_ros_demo_composite
+# hex_ros_demo_composite — 底盘与双臂全身阻抗组合启动包
+
 **中文** | [English](README.md)
 
 ## 目录
 
-- [1. 包简介](#1-包简介)
-- [2. 启动内容](#2-启动内容)
-- [3. 话题接口](#3-话题接口)
-- [4. 启动参数](#4-启动参数)
-- [5. 依赖关系](#5-依赖关系)
-- [6. 快速使用](#6-快速使用)
+- [项目概述](#项目概述)
+- [快速使用](#快速使用)
+- [安装](#安装)
+- [启动内容](#启动内容)
+- [话题接口](#话题接口)
+- [启动参数](#启动参数)
+- [项目结构](#项目结构)
 
-## 1. 包简介
+## 项目概述
 
-这是 whole-body impedance 组合启动包，用于同时启动 Maver X4 底盘和左右两侧真实机械臂的阻抗控制。该包只负责组合已有 driver、teleop 和 impedance launch，不包含独立控制节点。
+`hex_ros_demo_composite` 是 Maver X4 底盘与双机械臂的真机组合启动包。它将现有驱动、阻抗控制、手柄和键盘 launch 组织到统一命名空间中。
 
-当前提供一个 ROS 1/ROS 2 对应的真机组合入口：
+一次启动包含：
 
-- 底盘：Maver X4；
-- 左臂和右臂：可分别选择 Archer Y6 或 Firefly Y6；
-- 键盘：只启动一个共享键盘节点；
-- 手柄：用于底盘速度命令。
+- Maver X4 底盘驱动与底盘阻抗控制；
+- 左右 Archer Y6 / Firefly Y6 驱动与机械臂阻抗控制；
+- 底盘手柄输入、共享键盘和可选 RViz。
 
-## 2. 启动内容
+本包支持 **ROS 2 Humble**，兼容 **ROS 1 Noetic**。
 
-```text
-hex_ros_demo_composite/
-├── launch/
-│   ├── ros1/real_whole_body_impedance.launch
-│   └── ros2/real_whole_body_impedance.launch.py
-├── config/                  # 预留配置目录，当前组合 launch 不读取自定义 YAML
-├── CMakeLists.txt
-├── setup.py
-└── package.xml
-```
+## 快速使用
 
-## 3. 话题接口
+> 请先完成[安装](#安装)，再选择以下启动入口。
 
-启动后的主要话题如下：
+> 文档中的 `192.168.1.x` 均为示例 IP，请替换为实际设备地址。真机启动会驱动底盘和机械臂；请清空运动区域、确认急停有效，并先使用低风险参数验证。
 
-| 方向 | 话题 | 说明 |
-|------|------|------|
-| 发布 | `/chassis/cmd_vel` | 底盘手柄速度命令 |
-| 发布 | `/chassis/chs_ctrl` | 底盘阻抗控制命令 |
-| 发布 | `/left/manip_ctrl` | 左臂阻抗控制命令 |
-| 发布 | `/right/manip_ctrl` | 右臂阻抗控制命令 |
-| 订阅 | `/chassis/chs_state` | 底盘状态 |
-| 订阅 | `/left/manip_state` | 左臂状态 |
-| 订阅 | `/right/manip_state` | 右臂状态 |
-| 订阅 | `/teleop_keyboard_state` | 共享键盘状态 |
-
-各话题的实际相对名称由被引入的 driver 和 impedance launch 定义；上述路径是当前组合 launch 的命名空间结果。
-
-## 4. 启动参数
-
-底盘参数：
-
-| 参数 | 说明 |
-|------|------|
-| `chassis_robot_host` | 底盘控制器 IP 地址 |
-| `chassis_robot_port` | 底盘控制器端口 |
-
-左臂参数：
-
-| 参数 | 说明 |
-|------|------|
-| `left_robot_type` | `archer` 或 `firefly` |
-| `left_robot_host` | 左臂控制器 IP 地址 |
-| `left_robot_port` | 左臂控制器端口 |
-| `left_robot_grip_type` | `gp100`、`gp80`、`gr100` 或 `empty` |
-
-右臂参数：
-
-| 参数 | 说明 |
-|------|------|
-| `right_robot_type` | `archer` 或 `firefly` |
-| `right_robot_host` | 右臂控制器 IP 地址 |
-| `right_robot_port` | 右臂控制器端口 |
-| `right_robot_grip_type` | `gp100`、`gp80`、`gr100` 或 `empty` |
-
-其他参数：
-
-| 参数 | 说明 |
-|------|------|
-| `use_cmd` | 是否启用手柄命令输入 |
-| `rviz` | 是否启动底盘 launch 提供的 RViz |
-
-## 5. 依赖关系
-
-### Python 包
+### ROS 2
 
 ```shell
-pip3 install 'hex-util-msg>=0.1.0'
-pip3 install 'hex-util-ros>=0.1.0a4'
-pip3 install 'hex-driver-robot>=0.1.0'
+ros2 launch hex_ros_demo_composite real_whole_body_impedance.launch.py \
+    chassis_robot_host:=192.168.1.100 chassis_robot_port:=8439 \
+    left_robot_host:=192.168.1.100 left_robot_port:=8439 left_robot_type:=firefly left_robot_grip_type:=empty \
+    right_robot_host:=192.168.1.100 right_robot_port:=9439 right_robot_type:=firefly right_robot_grip_type:=empty \
+    use_cmd:=true rviz:=true
 ```
 
-### ROS 包
+### ROS 1
 
 ```shell
+roslaunch hex_ros_demo_composite real_whole_body_impedance.launch \
+    chassis_robot_host:=192.168.1.100 chassis_robot_port:=8439 \
+    left_robot_host:=192.168.1.100 left_robot_port:=8439 left_robot_type:=firefly left_robot_grip_type:=empty \
+    right_robot_host:=192.168.1.100 right_robot_port:=9439 right_robot_type:=firefly right_robot_grip_type:=empty
+```
+
+## 安装
+
+### 前置条件
+
+- 已安装 **ROS 2 Humble**；使用 ROS 1 时安装 **ROS 1 Noetic**。
+- 已安装 Python 3、`pip3`、Git，以及所选 ROS 版本的构建工具。
+- 真机场景需确保设备网络可达，并准备好实际 IP、端口和设备型号。
+
+### 1. 安装组合启动所需 Python 依赖
+
+```shell
+pip3 install \
+    'hex-util-msg>=0.1.0' \
+    'hex-util-ros>=0.1.0' \
+    'hex-util-runtime>=0.1.0' \
+    'hex-driver-robot>=0.1.0' \
+    evdev
+```
+
+### 2. 创建并进入工作空间
+
+```shell
+mkdir -p <your_ws>/src
+cd <your_ws>/src
+```
+
+### 3. 克隆组合启动所需 ROS 包
+
+```shell
+git clone https://github.com/hexfellow/hex_ros_msgs.git
 git clone https://github.com/hexfellow/hex_ros_demo_composite.git
 git clone https://github.com/hexfellow/hex_ros_demo_arm_impedance.git
 git clone https://github.com/hexfellow/hex_ros_demo_chassis_impedance.git
@@ -109,93 +90,97 @@ git clone https://github.com/hexfellow/hex_ros_urdf_archer_y6.git
 git clone https://github.com/hexfellow/hex_ros_urdf_maver_x4.git
 ```
 
-依赖职责：
+### 4. 编译包
 
-- `hex_ros_demo_arm_impedance`：左右机械臂阻抗控制节点和参数；
-- `hex_ros_demo_chassis_impedance`：Maver X4 底盘阻抗控制节点和参数；
-- `hex_ros_robot_arm`：Archer Y6 / Firefly Y6 机械臂 driver；
-- `hex_ros_robot_chassis`：Maver X4 底盘 driver；
-- `hex_ros_teleop_joystick`：手柄输入节点；
-- `hex_ros_teleop_keyboard`：公共键盘输入节点；
-- `hex_ros_urdf_archer_y6`：机械臂模型资源；
-- `hex_ros_urdf_maver_x4`：底盘模型资源。
-
-## 6. 快速使用
-
-### ROS 1
-
-先打开以下文件：
-
-```text
-launch/ros1/real_whole_body_impedance.launch
-```
-
-根据实际设备修改这些参数：
-
-```xml
-<arg name="chassis_robot_host" default="192.168.1.100"/>
-<arg name="chassis_robot_port" default="8439"/>
-<arg name="left_robot_type" default="archer"/>
-<arg name="left_robot_host" default="192.168.1.100"/>
-<arg name="left_robot_port" default="8439"/>
-<arg name="left_robot_grip_type" default="empty"/>
-<arg name="right_robot_type" default="archer"/>
-<arg name="right_robot_host" default="192.168.1.100"/>
-<arg name="right_robot_port" default="9439"/>
-<arg name="right_robot_grip_type" default="empty"/>
-```
-
-然后构建并启动：
-
-```shell
-source /opt/ros/noetic/setup.bash
-cd <your_ws>
-catkin_make
-source devel/setup.bash
-roslaunch hex_ros_demo_composite real_whole_body_impedance.launch
-```
-
-### ROS 2
-
-先打开以下文件：
-
-```text
-launch/ros2/real_whole_body_impedance.launch.py
-```
-
-修改这些 `DeclareLaunchArgument` 中的 `default_value`：
-
-```python
-chassis_host_arg = DeclareLaunchArgument(
-    name='chassis_robot_host', default_value='192.168.1.100')
-chassis_port_arg = DeclareLaunchArgument(
-    name='chassis_robot_port', default_value='8439')
-left_robot_type_arg = DeclareLaunchArgument(
-    name='left_robot_type', default_value='firefly')
-left_host_arg = DeclareLaunchArgument(
-    name='left_robot_host', default_value='192.168.1.100')
-left_port_arg = DeclareLaunchArgument(
-    name='left_robot_port', default_value='8439')
-left_grip_arg = DeclareLaunchArgument(
-    name='left_robot_grip_type', default_value='empty')
-right_robot_type_arg = DeclareLaunchArgument(
-    name='right_robot_type', default_value='firefly')
-right_host_arg = DeclareLaunchArgument(
-    name='right_robot_host', default_value='192.168.1.100')
-right_port_arg = DeclareLaunchArgument(
-    name='right_robot_port', default_value='9439')
-right_grip_arg = DeclareLaunchArgument(
-    name='right_robot_grip_type', default_value='empty')
-```
-
-修改完成后再构建并启动：
+**ROS 2：**
 
 ```shell
 source /opt/ros/humble/setup.bash
 cd <your_ws>
 colcon build
 source install/setup.bash
-ros2 launch hex_ros_demo_composite real_whole_body_impedance.launch.py
 ```
 
-键盘节点只启动一次，公共话题为 `/teleop_keyboard_state`。阻抗节点按 **`q`** 执行退出和归位流程。使用前请确认急停有效，并在安全区域验证参数和增益。
+**ROS 1：**
+
+```shell
+source /opt/ros/noetic/setup.bash
+cd <your_ws>
+catkin_make
+source devel/setup.bash
+```
+
+## 启动内容
+
+完整 launch 会启动：
+
+- Maver X4 底盘驱动、底盘阻抗控制节点和底盘手柄输入；
+- `left` 与 `right` 命名空间下的机械臂驱动和阻抗控制节点；
+- 一个共享键盘节点，发布 `/teleop_keyboard_state`；
+- 可选的 RViz。左右机械臂可分别通过 `left_robot_type` 和 `right_robot_type` 选择 Archer Y6 或 Firefly Y6。
+
+按一次 **`q`** 会同时触发底盘、左臂和右臂阻抗节点的退出与稳定流程；请保持整个运动区域畅通，直到三者完成。
+
+底盘手柄映射：左摇杆纵轴控制前后（X），左摇杆横轴控制横移（Y），右摇杆横轴控制旋转（yaw）；`Y` / `X` 增大 / 减小线速度，`B` / `A` 增大 / 减小角速度。可用 `ros2 topic echo /chassis/cmd_vel`（ROS 1 使用 `rostopic echo /chassis/cmd_vel`）确认命令输出。
+
+手柄的 `device_path` 由 `hex_ros_teleop_joystick` 管理。自动检测失败或存在多个输入设备时，请在 `<your_ws>/src/hex_ros_teleop_joystick/config/ros2/params.yaml` 或 `<your_ws>/src/hex_ros_teleop_joystick/config/ros1/params.yaml` 中设置，然后重新构建并 source 工作空间。
+
+## 话题接口
+
+下表汇总组合启动后的节点连接关系。
+
+| 话题 | 发布者 | 订阅者 | 类型 | 说明 |
+|------|--------|--------|------|------|
+| `/chassis/cmd_vel` | 手柄节点 | 底盘阻抗节点 | `geometry_msgs/msg/Twist` | 底盘速度命令 |
+| `/chassis/chs_ctrl` | 底盘阻抗节点 | 底盘驱动 | `hex_ros_msgs/msg/HexRosRoboChsCtrlStamped` | 底盘控制消息 |
+| `/left/manip_ctrl` | 左臂阻抗节点 | 左臂驱动 | `hex_ros_msgs/msg/HexRosRoboManipCtrlStamped` | 左臂控制消息 |
+| `/right/manip_ctrl` | 右臂阻抗节点 | 右臂驱动 | `hex_ros_msgs/msg/HexRosRoboManipCtrlStamped` | 右臂控制消息 |
+| `/chassis/chs_state` | 底盘驱动 | 底盘阻抗节点 | `hex_ros_msgs/msg/HexRosRoboChsStateStamped` | 底盘状态消息 |
+| `/left/manip_state` | 左臂驱动 | 左臂阻抗节点 | `hex_ros_msgs/msg/HexRosRoboManipStateStamped` | 左臂状态消息 |
+| `/right/manip_state` | 右臂驱动 | 右臂阻抗节点 | `hex_ros_msgs/msg/HexRosRoboManipStateStamped` | 右臂状态消息 |
+| `/teleop_keyboard_state` | 键盘节点 | 底盘与左右臂阻抗节点 | `hex_ros_msgs/msg/HexRosTeleopKeyboardStateStamped` | 键盘状态消息 |
+
+各话题的实际相对名称由被引入的 driver 和 impedance launch 定义；上述路径是当前组合 launch 的命名空间结果。
+
+## 启动参数
+
+| 参数 | 说明 |
+|------|------|
+| `chassis_robot_host` | 底盘控制器 IP 地址 |
+| `chassis_robot_port` | 底盘控制器端口 |
+| `left_robot_type` | 左臂类型：`archer` 或 `firefly` |
+| `left_robot_host` | 左臂控制器 IP 地址 |
+| `left_robot_port` | 左臂控制器端口 |
+| `left_robot_grip_type` | `gp100`、`gp80`、`gr100` 或 `empty` |
+| `right_robot_type` | 右臂类型：`archer` 或 `firefly` |
+| `right_robot_host` | 右臂控制器 IP 地址 |
+| `right_robot_port` | 右臂控制器端口 |
+| `right_robot_grip_type` | `gp100`、`gp80`、`gr100` 或 `empty` |
+| `use_cmd` | 是否启用手柄命令输入；ROS 1 固定为 `true` |
+| `rviz` | 是否启动 RViz；仅 ROS 2 顶层 launch 提供该参数 |
+
+## 项目结构
+
+```text
+hex_ros_demo_composite/
+├── config/
+│   ├── ros1/
+│   └── ros2/
+├── hex_ros_demo_composite/
+│   └── __init__.py                          # Python 包初始化文件
+├── launch/
+│   ├── ros1/
+│   │   └── real_whole_body_impedance.launch # ROS 1 组合启动文件
+│   └── ros2/
+│       └── real_whole_body_impedance.launch.py # ROS 2 组合启动文件
+├── resource/
+│   └── hex_ros_demo_composite               
+├── .gitignore                               
+├── CMakeLists.txt                           
+├── LICENSE                                  
+├── package.xml                              
+├── README_cn.md                             
+├── README.md                                
+├── setup.cfg                                
+└── setup.py                                 
+```
