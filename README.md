@@ -28,8 +28,6 @@ This package supports **ROS 2 Humble** and is compatible with **ROS 1 Noetic**.
 
 > Complete [Installation](#installation) before launching.
 
-> All `192.168.1.x` addresses in this document are examples; replace them with actual device addresses. This launch moves the chassis and arms. Clear the operating area, verify the emergency stop, and validate with low-risk settings first.
-
 ### ROS 2
 
 ```shell
